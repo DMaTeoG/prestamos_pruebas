@@ -1,0 +1,67 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: prestamos_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-scoring}
+      POSTGRES_USER: ${DB_USER:-scoring}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-scoring_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-scoring} -d ${DB_NAME:-scoring}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    image: prestamos-backend:${APP_VERSION:-latest}
+    container_name: prestamos_backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.local
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-prod}
+      DEBUG: ${DEBUG:-True}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      DB_NAME: ${DB_NAME:-scoring}
+      DB_USER: ${DB_USER:-scoring}
+      DB_PASSWORD: ${DB_PASSWORD:-scoring_password}
+      DB_HOST: db
+      DB_PORT: 5432
+      MODEL_ARTIFACT_DIR: /app/ml/artifacts/
+      APP_VERSION: ${APP_VERSION:-dev}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/v1/health/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  locust:
+    image: locustio/locust:2.32.4
+    container_name: prestamos_locust
+    profiles: ["perf"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./tests/performance:/mnt/locust
+    environment:
+      LOCUST_HOST: http://backend:8000
+      PERF_USER_EMAIL: ${PERF_USER_EMAIL:-analyst@example.com}
+      PERF_USER_PASSWORD: ${PERF_USER_PASSWORD:-AnalystPass123!}
+    command: -f /mnt/locust/locustfile.py --host http://backend:8000
+
+volumes:
+  postgres_data:

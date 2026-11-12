@@ -1,0 +1,72 @@
+name: CD - Simulated Deploy, Locust Smoke & Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      simulate_failure:
+        description: "Simular fallo post-despliegue para probar rollback"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+  push:
+    branches: [main, master]
+
+jobs:
+  deploy-and-verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12 (for Locust & Telemetry)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install performance & telemetry dependencies
+        run: pip install -r tests/performance/requirements.txt
+
+      - name: Deploy with automatic rollback
+        env:
+          APP_VERSION: ${{ github.sha }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          chmod +x scripts/deploy_with_rollback.sh
+          ./scripts/deploy_with_rollback.sh
+
+      - name: Run Locust smoke performance test
+        run: |
+          mkdir -p reports
+          locust -f tests/performance/locust_smoke.py \
+            --headless \
+            --users 5 \
+            --spawn-rate 1 \
+            --run-time 15s \
+            --host http://localhost:8000 \
+            --csv reports/locust_smoke \
+            --html reports/locust_smoke.html
+
+      - name: Simulate failure & rollback (when requested)
+        if: ${{ github.event.inputs.simulate_failure == 'true' }}
+        env:
+          APP_VERSION: ${{ github.sha }}
+          HEALTH_URL: http://localhost:8000/api/v1/non-existent-health/
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          echo "Simulating failed healthcheck to trigger rollback..."
+          ./scripts/deploy_with_rollback.sh || echo "Rollback executed as expected."
+
+      - name: Upload Locust performance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: locust-smoke-report
+          path: reports/
+
+      - name: Cleanup containers
+        if: always()
+        run: docker compose down -v

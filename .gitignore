@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+coverage.xml
+.coverage
+
+# Django / Local DB / Env
+.env
+*.sqlite3
+db.sqlite3
+staticfiles/
+media/
+
+# Terraform / IaC
+infra/**/.terraform/
+infra/**/*.tfstate
+infra/**/*.tfstate.*
+infra/**/*.tfvars
+!infra/**/*.tfvars.example
+
+# Locust / Reports
+reports/
+*.html
+*.csv
+!plantilla_estados_financieros.csv
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

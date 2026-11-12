@@ -50,7 +50,6 @@ def send_telegram_message(message: str) -> bool:
         {
             "chat_id": chat_id,
             "text": message,
-            "parse_mode": "Markdown",
         }
     ).encode("utf-8")
 

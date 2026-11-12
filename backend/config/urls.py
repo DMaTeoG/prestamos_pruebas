@@ -1,15 +1,15 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 
-from config.views import health_check
-from apps.accounts.views import AdminUserListView, AdminUserDetailView
+from apps.accounts.views import AdminUserDetailView, AdminUserListView
+from apps.audit.views import AdminAuditLogListView
 from apps.companies.views import AdminMembershipListView, AdminMembershipUpdateView
 from apps.scoring.views import (
     AdminEvaluationDecisionView,
     AdminModelActivateView,
     AdminModelVersionListView,
 )
-from apps.audit.views import AdminAuditLogListView
+from config.views import health_check
 
 urlpatterns = [
     path("admin/", admin.site.urls),

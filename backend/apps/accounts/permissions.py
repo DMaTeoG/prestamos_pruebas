@@ -1,5 +1,7 @@
 import logging
+
 from rest_framework.permissions import BasePermission
+
 from apps.accounts.models import Role
 from apps.companies.models import CompanyMembership, CompanyProfile
 

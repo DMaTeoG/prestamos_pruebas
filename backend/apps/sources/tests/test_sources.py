@@ -1,8 +1,9 @@
-import pytest
-from unittest.mock import patch, MagicMock
-from apps.sources.services import MockSource, OpenDataSource, build_retry_session, _format_registration_date
-from apps.sources.models import DataSourceSnapshot
+from unittest.mock import MagicMock, patch
 
+import pytest
+
+from apps.sources.models import DataSourceSnapshot
+from apps.sources.services import MockSource, OpenDataSource, _format_registration_date, build_retry_session
 
 # ==============================================================================
 # Semana 1: Patrón AAA (Arrange, Act, Assert)

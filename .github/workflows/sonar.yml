@@ -37,11 +37,11 @@ jobs:
         run: pytest --cov=apps --cov-report=xml:coverage.xml --cov-fail-under=80
 
       - name: SonarCloud Scan
-        if: ${{ secrets.SONAR_TOKEN != '' }}
-        uses: SonarSource/sonarqube-scan-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        if: ${{ env.SONAR_TOKEN != '' }}
+        uses: SonarSource/sonarqube-scan-action@v4
 
       - name: Notify Telegram (SonarCloud Status)
         if: always()

@@ -1,7 +1,7 @@
 import pytest
 from django.core.exceptions import ValidationError
-from apps.companies.validators import calculate_verification_digit, validate_and_clean_nit
 
+from apps.companies.validators import calculate_verification_digit, validate_and_clean_nit
 
 # ==============================================================================
 # Semana 1: Patrón AAA (Arrange, Act, Assert)

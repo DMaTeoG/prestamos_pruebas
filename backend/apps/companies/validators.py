@@ -1,4 +1,5 @@
 import re
+
 from django.core.exceptions import ValidationError
 
 
@@ -11,7 +12,7 @@ def calculate_verification_digit(nit_num: str) -> str:
 
     weights = [71, 67, 59, 53, 47, 43, 41, 37, 29, 23, 19, 17, 13, 7, 3]
     nit_padded = nit_num.zfill(15)
-    
+
     total = sum(int(nit_padded[i]) * weights[i] for i in range(15))
     remainder = total % 11
 
@@ -30,7 +31,7 @@ def validate_and_clean_nit(nit_raw: str) -> tuple[str, str]:
 
     # Remove dots and spaces
     cleaned = re.sub(r"[\.\s]", "", nit_raw.strip())
-    
+
     # Check if format has hyphens e.g. 900123456-7
     if "-" in cleaned:
         parts = cleaned.split("-")

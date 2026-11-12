@@ -1,9 +1,11 @@
 import io
+
 import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient
+
 from apps.accounts.models import CustomUser, Role
-from apps.companies.models import CompanyProfile, CompanyMembership
+from apps.companies.models import CompanyMembership, CompanyProfile
 
 
 @pytest.mark.django_db

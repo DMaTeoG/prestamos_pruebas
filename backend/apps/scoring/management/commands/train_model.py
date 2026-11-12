@@ -1,7 +1,7 @@
-import os
 from django.core.management.base import BaseCommand
-from ml.src.train import train_and_export_model
+
 from apps.scoring.models import ModelVersion
+from ml.src.train import train_and_export_model
 
 
 class Command(BaseCommand):

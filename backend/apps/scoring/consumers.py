@@ -1,6 +1,7 @@
-import json
 import asyncio
+import json
 import logging
+
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 logger = logging.getLogger("apps.scoring.consumers")

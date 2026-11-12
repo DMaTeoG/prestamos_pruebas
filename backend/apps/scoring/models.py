@@ -1,5 +1,6 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
+
 from apps.companies.models import CompanyProfile
 from apps.financials.models import FinancialStatement
 

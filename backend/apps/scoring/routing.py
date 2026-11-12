@@ -1,4 +1,5 @@
 from django.urls import re_path
+
 from apps.scoring.consumers import ScoringConsumer
 
 websocket_urlpatterns = [

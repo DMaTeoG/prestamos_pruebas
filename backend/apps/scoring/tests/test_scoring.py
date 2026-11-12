@@ -1,14 +1,14 @@
 import pytest
 from rest_framework.exceptions import ValidationError
+
 from apps.accounts.models import CustomUser, Role
 from apps.companies.models import CompanyProfile
+from apps.scoring.models import Evaluation, ModelVersion
 from apps.scoring.services import (
     evaluate_company,
     get_active_model_version,
     validate_safe_artifact_path,
 )
-from apps.scoring.models import Evaluation, ModelVersion
-
 
 # ==============================================================================
 # Semana 1: Patrón AAA (Arrange, Act, Assert)

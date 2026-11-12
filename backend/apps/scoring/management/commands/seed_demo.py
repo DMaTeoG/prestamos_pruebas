@@ -1,7 +1,9 @@
 from decimal import Decimal
+
 from django.core.management.base import BaseCommand
+
 from apps.accounts.models import CustomUser, Role
-from apps.companies.models import CompanyProfile, CompanyMembership, CompanySize, MembershipStatus
+from apps.companies.models import CompanyMembership, CompanyProfile, CompanySize, MembershipStatus
 from apps.financials.models import FinancialStatement, StatementOrigin
 from apps.scoring.services import evaluate_company, get_active_model_version
 

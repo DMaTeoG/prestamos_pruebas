@@ -1,21 +1,22 @@
-import os
 import logging
+import os
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+
 import joblib
-import shap
-import pandas as pd
 import numpy as np
+import pandas as pd
+import shap
 from django.conf import settings
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from apps.scoring.models import ModelVersion, Evaluation, RiskLevel, CreditDecisionStatus
+from apps.audit.models import AuditAction
+from apps.audit.services import log_action
 from apps.financials.models import FinancialStatement
 from apps.financials.ratios import calculate_financial_ratios
-from apps.audit.services import log_action
-from apps.audit.models import AuditAction
+from apps.scoring.models import CreditDecisionStatus, Evaluation, ModelVersion, RiskLevel
 from ml.src.features import build_features
 
 logger = logging.getLogger("apps.scoring.services")

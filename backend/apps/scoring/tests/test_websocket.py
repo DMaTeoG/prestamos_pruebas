@@ -1,6 +1,7 @@
-import json
 import asyncio
+
 from channels.testing import WebsocketCommunicator
+
 from config.asgi import application
 
 

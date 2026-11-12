@@ -1,5 +1,6 @@
 from django.urls import path
-from apps.financials.views import FinancialStatementListCreateView, FinancialStatementCSVImportView
+
+from apps.financials.views import FinancialStatementCSVImportView, FinancialStatementListCreateView
 
 urlpatterns = [
     path("", FinancialStatementListCreateView.as_view(), name="financial-statement-list-create"),

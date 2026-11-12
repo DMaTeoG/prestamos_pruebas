@@ -5,13 +5,13 @@ de los payloads JSON devueltos por los endpoints de la API.
 """
 
 import json
+
+import jsonschema
 import pytest
 import requests
-import jsonschema
-from django.urls import reverse
+
 from apps.accounts.models import CustomUser, Role
 from apps.companies.models import CompanyProfile
-
 
 # ------------------------------------------------------------------------------
 # Definición de Esquemas JSON (Data Contracts)
@@ -160,7 +160,7 @@ class TestApiJsonSchemaContracts:
             legal_name="BANCOLOMBIA S.A.",
             ciiu="6412",
         )
-        analyst = CustomUser.objects.create_user(
+        CustomUser.objects.create_user(
             email="analyst_lookup@banco.com",
             password="Password123!",
             role=Role.ANALYST,

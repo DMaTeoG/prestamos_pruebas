@@ -1,4 +1,5 @@
 from rest_framework import generics
+
 from apps.accounts.permissions import IsAdminUserRole
 from apps.audit.models import AuditLog
 from apps.audit.serializers import AuditLogSerializer

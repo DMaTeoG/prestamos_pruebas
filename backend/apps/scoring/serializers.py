@@ -1,7 +1,9 @@
 from decimal import Decimal
+
 from rest_framework import serializers
-from apps.scoring.models import Evaluation, ModelVersion, CreditDecisionStatus
+
 from apps.companies.serializers import CompanyProfileSerializer
+from apps.scoring.models import CreditDecisionStatus, Evaluation, ModelVersion
 
 
 class ModelVersionSerializer(serializers.ModelSerializer):

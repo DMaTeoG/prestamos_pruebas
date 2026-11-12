@@ -1,6 +1,7 @@
 from django.urls import path
-from apps.scoring.views import EvaluationListCreateView, EvaluationDetailView
+
 from apps.reports.views import EvaluationReportPDFView
+from apps.scoring.views import EvaluationDetailView, EvaluationListCreateView
 
 urlpatterns = [
     path("", EvaluationListCreateView.as_view(), name="evaluation-list-create"),

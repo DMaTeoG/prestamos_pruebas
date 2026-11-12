@@ -1,11 +1,18 @@
 import logging
+
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from apps.companies.models import CompanyProfile, CompanyMembership
+from apps.accounts.permissions import (
+    IsAdminUserRole,
+    IsCompanyAuthorizedObjectPermission,
+)
+from apps.audit.models import AuditAction
+from apps.audit.services import log_action
+from apps.companies.models import CompanyMembership, CompanyProfile
 from apps.companies.validators import validate_and_clean_nit
 from apps.scoring.models import Evaluation, ModelVersion
 from apps.scoring.serializers import (
@@ -19,12 +26,6 @@ from apps.scoring.services import (
     get_active_model_version,
     record_credit_decision,
 )
-from apps.accounts.permissions import (
-    IsAdminUserRole,
-    IsCompanyAuthorizedObjectPermission,
-)
-from apps.audit.models import AuditAction
-from apps.audit.services import log_action
 
 logger = logging.getLogger("apps.scoring.views")
 

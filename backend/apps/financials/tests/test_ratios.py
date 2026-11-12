@@ -1,9 +1,10 @@
 from decimal import Decimal
+
 import pytest
+
 from apps.companies.models import CompanyProfile
 from apps.financials.models import FinancialStatement
 from apps.financials.ratios import calculate_financial_ratios, safe_divide
-
 
 # ==============================================================================
 # Semana 1: Patrón AAA

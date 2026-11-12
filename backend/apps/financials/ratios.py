@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 def safe_divide(numerator: Decimal | float | int, denominator: Decimal | float | int) -> float | None:

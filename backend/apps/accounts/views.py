@@ -1,18 +1,19 @@
 import logging
+
 from django.conf import settings
-from rest_framework import status, generics
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from apps.accounts.models import CustomUser
 from apps.accounts.permissions import IsAdminUserRole
 from apps.accounts.serializers import (
     CustomTokenObtainPairSerializer,
-    UserSerializer,
     RegisterSerializer,
+    UserSerializer,
 )
 from apps.audit.models import AuditAction
 from apps.audit.services import log_action

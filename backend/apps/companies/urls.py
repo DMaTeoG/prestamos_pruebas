@@ -1,5 +1,6 @@
-from django.urls import path, include
-from apps.companies.views import CompanyLookupView, CompanyDetailView, MyCompanyView
+from django.urls import include, path
+
+from apps.companies.views import CompanyDetailView, CompanyLookupView, MyCompanyView
 
 urlpatterns = [
     path("lookup/", CompanyLookupView.as_view(), name="company-lookup"),

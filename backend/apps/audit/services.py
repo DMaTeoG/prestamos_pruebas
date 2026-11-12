@@ -1,4 +1,4 @@
-from apps.audit.models import AuditLog, AuditAction
+from apps.audit.models import AuditLog
 
 
 def get_client_ip(request):

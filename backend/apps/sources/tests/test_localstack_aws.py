@@ -4,10 +4,10 @@ Estructuradas estrictamente bajo el patrón AAA (Arrange, Act, Assert).
 """
 
 from unittest.mock import MagicMock
+
 import pytest
 from botocore.exceptions import ClientError
-from scripts.init_localstack import provision_s3_bucket, provision_sqs_queues, get_aws_clients
-
+from scripts.init_localstack import provision_s3_bucket, provision_sqs_queues
 
 # ==============================================================================
 # Semana 1: Patrón AAA

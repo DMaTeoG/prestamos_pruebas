@@ -1,8 +1,6 @@
-import csv
-import io
-from decimal import Decimal
 from rest_framework import serializers
-from apps.financials.models import FinancialStatement, StatementOrigin
+
+from apps.financials.models import FinancialStatement
 from apps.financials.ratios import calculate_financial_ratios
 
 

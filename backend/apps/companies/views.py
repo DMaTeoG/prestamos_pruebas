@@ -1,20 +1,21 @@
 import logging
-from rest_framework import generics, status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 
-from apps.companies.models import CompanyProfile, CompanyMembership
-from apps.companies.serializers import CompanyProfileSerializer, CompanyMembershipSerializer
-from apps.companies.validators import validate_and_clean_nit
-from apps.sources.services import OpenDataSource
-from apps.audit.services import log_action
-from apps.audit.models import AuditAction
+from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from apps.accounts.permissions import (
     IsAdminUserRole,
     IsCompanyAuthorizedObjectPermission,
     user_can_access_company,
 )
+from apps.audit.models import AuditAction
+from apps.audit.services import log_action
+from apps.companies.models import CompanyMembership, CompanyProfile
+from apps.companies.serializers import CompanyMembershipSerializer, CompanyProfileSerializer
+from apps.companies.validators import validate_and_clean_nit
+from apps.sources.services import OpenDataSource
 
 logger = logging.getLogger("apps.companies.views")
 

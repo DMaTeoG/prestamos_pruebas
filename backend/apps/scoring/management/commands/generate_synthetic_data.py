@@ -1,5 +1,7 @@
 import os
+
 from django.core.management.base import BaseCommand
+
 from ml.src.synth import generate_synthetic_dataset
 
 

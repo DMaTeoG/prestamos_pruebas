@@ -1,5 +1,6 @@
 import os
 import sys
+
 from .base import *  # noqa: F403
 
 DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "yes")

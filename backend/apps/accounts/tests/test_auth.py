@@ -1,9 +1,9 @@
 import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient
-from apps.accounts.models import CustomUser, Role
-from apps.companies.models import CompanyProfile, CompanyMembership
 
+from apps.accounts.models import CustomUser, Role
+from apps.companies.models import CompanyMembership, CompanyProfile
 
 # ==============================================================================
 # Semana 1: Patrón AAA (Arrange, Act, Assert) en Autenticación y Autorización

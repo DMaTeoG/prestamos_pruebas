@@ -1,9 +1,11 @@
 import logging
-import requests
 from abc import ABC, abstractmethod
+
+import requests
+from django.conf import settings
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from django.conf import settings
+
 from apps.sources.models import DataSourceSnapshot
 
 logger = logging.getLogger("apps.sources.services")

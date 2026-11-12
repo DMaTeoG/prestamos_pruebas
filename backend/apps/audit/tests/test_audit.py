@@ -1,9 +1,9 @@
 import pytest
-from apps.accounts.models import CustomUser, Role
-from apps.accounts.permissions import IsAnalyst, IsCompanyUser, IsAdminUserRole
-from apps.audit.services import log_action
-from apps.audit.models import AuditLog, AuditAction
 
+from apps.accounts.models import CustomUser, Role
+from apps.accounts.permissions import IsAdminUserRole, IsAnalyst, IsCompanyUser
+from apps.audit.models import AuditAction, AuditLog
+from apps.audit.services import log_action
 
 # ==============================================================================
 # Semana 1: Patrón AAA (Arrange, Act, Assert) en Permisos y Auditoría

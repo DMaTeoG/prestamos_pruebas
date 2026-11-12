@@ -13,6 +13,27 @@ import urllib.parse
 import urllib.request
 import json
 
+# Intento de cargar variables de entorno desde .env local si existe
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    root_env = os.path.join(os.path.dirname(__file__), "..", ".env")
+    if os.path.exists(root_env):
+        load_dotenv(root_env)
+except ImportError:
+    # Si python-dotenv no está instalado, buscar .env manualmente como fallback
+    root_env = os.path.join(os.path.dirname(__file__), "..", ".env")
+    if os.path.exists(root_env):
+        with open(root_env, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, _, val = line.partition("=")
+                    key = key.strip()
+                    val = val.strip().strip("'\"")
+                    if key and key not in os.environ:
+                        os.environ[key] = val
+
 
 def send_telegram_message(message: str) -> bool:
     token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()

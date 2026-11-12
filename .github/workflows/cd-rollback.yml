@@ -1,10 +1,10 @@
-name: CD - Simulated Deploy, Locust Smoke & Rollback
+name: CD - Staging Smoke Tests, Production Deploy & Automated Rollback
 
 on:
   workflow_dispatch:
     inputs:
       simulate_failure:
-        description: "Simular fallo post-despliegue para probar rollback"
+        description: "Simular fallo post-despliegue (HTTP 500) para auditar Rollback automático"
         required: false
         default: "false"
         type: choice
@@ -13,31 +13,38 @@ on:
     branches: [main, master]
 
 jobs:
-  deploy-and-verify:
+  # ============================================================================
+  # Fase 1: Despliegue en STAGING + Validaciones automáticas (Smoke Tests)
+  # ============================================================================
+  staging-verify:
+    name: Staging Deployment & Smoke Testing
     runs-on: ubuntu-latest
+    environment: staging
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.12 (for Locust & Telemetry)
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
 
-      - name: Install performance & telemetry dependencies
+      - name: Install CD & Performance dependencies
         run: pip install -r tests/performance/requirements.txt
 
-      - name: Deploy with automatic rollback
+      - name: Deploy to Staging Environment
         env:
           APP_VERSION: ${{ github.sha }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          chmod +x scripts/deploy_with_rollback.sh
-          ./scripts/deploy_with_rollback.sh
+          python scripts/deploy.py \
+            --stage staging \
+            --version "${GITHUB_SHA::7}" \
+            --health-url "http://localhost:8000/api/v1/health/"
 
-      - name: Run Locust smoke performance test
+      - name: Run Automated Smoke Tests in Staging (Locust)
         run: |
           mkdir -p reports
           locust -f tests/performance/locust_smoke.py \
@@ -46,27 +53,65 @@ jobs:
             --spawn-rate 1 \
             --run-time 15s \
             --host http://localhost:8000 \
-            --csv reports/locust_smoke \
-            --html reports/locust_smoke.html
+            --csv reports/locust_staging_smoke \
+            --html reports/locust_staging_smoke.html
 
-      - name: Simulate failure & rollback (when requested)
-        if: ${{ github.event.inputs.simulate_failure == 'true' }}
-        env:
-          APP_VERSION: ${{ github.sha }}
-          HEALTH_URL: http://localhost:8000/api/v1/non-existent-health/
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          echo "Simulating failed healthcheck to trigger rollback..."
-          ./scripts/deploy_with_rollback.sh || echo "Rollback executed as expected."
-
-      - name: Upload Locust performance report
+      - name: Upload Staging Smoke Test Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: locust-smoke-report
+          name: locust-staging-smoke-report
           path: reports/
 
-      - name: Cleanup containers
+      - name: Teardown Staging containers
+        if: always()
+        run: docker compose down -v
+
+  # ============================================================================
+  # Fase 2: Despliegue en PRODUCCIÓN con Rollback Automático ante fallos
+  # ============================================================================
+  production-deploy:
+    name: Production Continuous Deployment
+    needs: staging-verify
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r tests/performance/requirements.txt
+
+      - name: Deploy to Production with Automatic Rollback (deploy.py)
+        env:
+          APP_VERSION: ${{ github.sha }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python scripts/deploy.py \
+            --stage prod \
+            --version "${GITHUB_SHA::7}" \
+            --health-url "http://localhost:8000/api/v1/health/"
+
+      - name: Audit Rollback Mechanism (Triggered if simulate_failure=true)
+        if: ${{ github.event.inputs.simulate_failure == 'true' }}
+        env:
+          APP_VERSION: ${{ github.sha }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          echo "Simulando fallo HTTP 500 para verificar ejecución del Rollback automático..."
+          python scripts/deploy.py \
+            --stage prod \
+            --version "${GITHUB_SHA::7}-faulty" \
+            --simulate-failure || echo "Rollback automático ejecutado satisfactoriamente."
+
+      - name: Teardown Production containers
         if: always()
         run: docker compose down -v

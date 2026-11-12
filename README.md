@@ -10,12 +10,15 @@ Repositorio estructurado para demostrar e integrar prácticas **DevOps** sobre e
 |---|---|---|
 | **Backend + ML** | `backend/`, `ml/` | API REST de scoring crediticio empresarial (`/api/v1/`) y modelos `.joblib` necesarios para inferencia y explicabilidad SHAP. |
 | **Healthcheck** | `backend/config/views.py`, `backend/config/urls.py` | Expone `GET /api/v1/health/` verificando que Django y PostgreSQL respondan. Es la base para Docker y para decidir si un despliegue requiere *rollback*. |
-| **Contenedores** | `docker/backend.Dockerfile`, `docker/entrypoint.sh`, `docker-compose.yml` | Empaqueta el backend de forma reproducible, ejecuta migraciones automáticamente al iniciar y levanta `PostgreSQL + Backend + Locust`. |
+| **Contenedores & QA** | `docker/backend.Dockerfile`, `docker/entrypoint.sh`, `docker-compose.yml` | Empaqueta el backend en `python:3.11-slim` y orquesta `db`, `localstack`, `backend`, `test` (runner QA inmutable que retorna Exit Code 0) y `locust`. |
+| **Pruebas y Calidad (AAA + BVA)** | `backend/apps/*/tests/`, `backend/pytest.ini` | Pruebas unitarias estructuradas bajo el patrón AAA, BVA con `@pytest.mark.parametrize` y Quality Gate con `--cov-fail-under=80`. |
+| **Pruebas de API y Contrato** | `backend/apps/scoring/tests/test_api_contracts.py` | Pruebas HTTP con `requests` y validación de contrato de respuestas con `jsonschema`. |
 | **Pruebas de Rendimiento** | `tests/performance/locustfile.py`, `locust_smoke.py` | Simula usuarios concurrentes contra la API para medir latencia (p95), peticiones por segundo (RPS) y tasa de errores. |
-| **Trazabilidad** | `docs/traceability_matrix.md` | Conecta cada requisito del proyecto integrador con su implementación, prueba automatizada y evidencia. |
-| **CI + SonarCloud** | `.github/workflows/ci.yml`, `sonar-project.properties` | Ejecuta *linting* (`ruff`), pruebas unitarias con cobertura (`pytest --cov`) y deja listo el análisis estático de calidad en **SonarCloud**. |
-| **CD con Rollback** | `scripts/deploy_with_rollback.sh`, `.github/workflows/cd-rollback.yml` | Despliega una nueva versión en contenedor, verifica su salud y, si falla, **revierte automáticamente** a la imagen anterior (`:previous`). |
-| **IaC (Terraform)** | `infra/main.tf`, `infra/variables.tf`, `infra/outputs.tf` | Define de forma declarativa la red privada, el volumen persistente de BD y los contenedores, permitiendo recrear el entorno con un comando. |
+| **Trazabilidad** | `docs/traceability_matrix.md` | Conecta cada semana y requisito del proyecto integrador con su implementación, prueba automatizada y evidencia. |
+| **CI con Docker Compose** | `.github/workflows/ci.yml` | Ejecuta *linting* (`ruff`), levanta el entorno de pruebas con `docker compose run --rm test` y notifica a Telegram. |
+| **Análisis Estático (SonarCloud)** | `.github/workflows/sonar.yml`, `sonar-project.properties` | Pipeline preventivo que detecta Code Smells, vulnerabilidades y deuda técnica antes de llegar a producción. |
+| **CD con Rollback y Staging** | `scripts/deploy.py`, `.github/workflows/cd-rollback.yml` | Despliega primero en Staging con Smoke Tests de Locust, pasa a Producción y ejecuta **rollback automático** ante fallo (HTTP 500). |
+| **IaC (LocalStack AWS + Terraform)**| `scripts/init_localstack.py`, `docker-compose.yml`, `infra/` | Emula AWS S3 (`prestamos-documentos-bucket`) y colas SQS con `boto3`, además de Terraform para recursos Docker. |
 | **Telemetría en Telegram** | `scripts/notify_telegram.py` | Envía notificaciones en tiempo real (éxito, fallo o rollback) a un chat/grupo de Telegram. Funciona en modo *dry-run* si aún no hay credenciales. |
 
 ---
@@ -25,25 +28,32 @@ Repositorio estructurado para demostrar e integrar prácticas **DevOps** sobre e
 ```text
 prestamos_pruebas/
 ├── backend/                     # Código fuente del backend Django y pruebas
+│   ├── pytest.ini               # Configuración pytest con Quality Gate --cov-fail-under=80
+│   ├── requirements.txt         # Dependencias (incluye jsonschema y boto3)
+│   └── apps/                    # Apps de dominio con suites bajo patrón AAA y BVA
 ├── ml/                          # Features y artefactos (.joblib) para scoring
 ├── docker/
-│   ├── backend.Dockerfile       # Imagen Python 3.12 + dependencias + HEALTHCHECK
+│   ├── backend.Dockerfile       # Imagen python:3.11-slim + dependencias + HEALTHCHECK
 │   └── entrypoint.sh            # Migraciones automáticas + arranque con Daphne
-├── docker-compose.yml           # Orquestación local: db, backend y locust
+├── docker-compose.yml           # Orquestación: db, localstack, backend, test (QA runner) y locust
 ├── tests/
 │   └── performance/
-│       ├── locustfile.py        # Escenarios completos (auth, perfil, evaluaciones, lookup)
-│       ├── locust_smoke.py      # Smoke test rápido de salud post-despliegue
+│       ├── locustfile.py        # Escenarios de estrés (RPS y latencia)
+│       ├── locust_smoke.py      # Smoke test rápido para Staging
 │       └── requirements.txt     # Dependencias aisladas para rendimiento
 ├── infra/                       # Infraestructura como Código (Terraform + Docker)
 ├── scripts/
-│   ├── deploy_with_rollback.sh  # Lógica de despliegue simulado + rollback automático
-│   └── notify_telegram.py       # Cliente ligero para Bot API de Telegram
+│   ├── init_localstack.py       # Aprovisionamiento IaC en LocalStack (S3 + SQS con boto3)
+│   ├── deploy.py                # CD en Python con Staging, Prod y Rollback ante fallo (HTTP 500)
+│   ├── deploy_with_rollback.sh  # Script shell alternativo de rollback
+│   └── notify_telegram.py       # Telemetría móvil vía Bot API de Telegram
 ├── .github/workflows/
-│   ├── ci.yml                   # Pipeline CI (Ruff + Pytest/Coverage + SonarCloud + Telegram)
-│   └── cd-rollback.yml          # Pipeline CD (Deploy + Locust Smoke + Rollback + Telegram)
+│   ├── ci.yml                   # Pipeline CI (Ruff + Docker Compose QA Tests + Telegram)
+│   ├── sonar.yml                # Pipeline SonarCloud (Quality Gate, Code Smells, Vulnerabilidades)
+│   └── cd-rollback.yml          # Pipeline CD (Staging Smoke + Prod Deploy + Rollback + Telegram)
 ├── docs/
-│   └── traceability_matrix.md   # Matriz de trazabilidad requisitos ↔ pruebas
+│   └── traceability_matrix.md   # Matriz de trazabilidad integral (Semanas 1 a 10)
+├── PRESENTACION_QA_DEVSECOPS.md # Diapositivas para exposición del proyecto (Semanas 1 a 10)
 ├── sonar-project.properties     # Configuración de SonarCloud
 ├── .env.example                 # Variables de entorno de ejemplo
 └── .gitignore

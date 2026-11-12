@@ -4,34 +4,66 @@ from apps.sources.services import MockSource, OpenDataSource, build_retry_sessio
 from apps.sources.models import DataSourceSnapshot
 
 
+# ==============================================================================
+# Semana 1: Patrón AAA (Arrange, Act, Assert)
+# Semana 2: Parametrización (@pytest.mark.parametrize)
+# ==============================================================================
+
+
 @pytest.mark.django_db
 class TestDataSources:
-    def test_format_registration_date(self):
-        assert _format_registration_date("20150331") == "2015-03-31"
-        assert _format_registration_date("2020-05-15") == "2020-05-15"
-        assert _format_registration_date(None) == "2020-01-01"
+    @pytest.mark.parametrize(
+        "raw_date,expected_formatted",
+        [
+            ("20150331", "2015-03-31"),   # Formato numérico YYYYMMDD
+            ("2020-05-15", "2020-05-15"), # Formato estándar ISO YYYY-MM-DD
+            (None, "2020-01-01"),         # Valor por defecto ante fecha nula
+        ],
+    )
+    def test_format_registration_date_parametrized_aaa(self, raw_date, expected_formatted):
+        """Prueba parametrizada de formateo de fechas con patrón AAA."""
+        # Arrange
+        input_date = raw_date
 
-    def test_retry_session_configuration(self):
+        # Act
+        formatted_date = _format_registration_date(input_date)
+
+        # Assert
+        assert formatted_date == expected_formatted
+
+    def test_retry_session_configuration_aaa(self):
+        """Verifica la configuración del adaptador HTTP de reintentos con AAA."""
+        # Arrange & Act: Construcción de la sesión resiliente
         session = build_retry_session(retries=2, backoff_factor=0.3)
         adapter = session.get_adapter("https://www.datos.gov.co/")
+
+        # Assert: Aserciones sobre las políticas de reintento
         assert adapter.max_retries.total == 2
         assert 503 in adapter.max_retries.status_forcelist
         session.close()
 
-    def test_mock_source_returns_valid_dict_and_snapshot(self):
+    def test_mock_source_returns_valid_dict_and_snapshot_aaa(self):
+        """Verifica la fuente de respaldo MockSource con AAA."""
+        # Arrange
         source = MockSource()
-        data = source.fetch_company_info("900123456-7")
+        nit_to_fetch = "900123456-7"
 
-        assert data["nit"] == "900123456-7"
+        # Act
+        data = source.fetch_company_info(nit_to_fetch)
+
+        # Assert
+        assert data["nit"] == nit_to_fetch
         assert "EMPRESA SIMULADA" in data["legal_name"]
         assert data["origin"] == "MOCK"
 
-        snapshot = DataSourceSnapshot.objects.filter(nit="900123456-7").first()
+        snapshot = DataSourceSnapshot.objects.filter(nit=nit_to_fetch).first()
         assert snapshot is not None
         assert snapshot.source_name == "MockSource"
         assert snapshot.status_code == 200
 
-    def test_open_data_source_success_parsing(self):
+    def test_open_data_source_success_parsing_aaa(self):
+        """Verifica el parsing exitoso de Open Data simulado con AAA."""
+        # Arrange
         source = OpenDataSource()
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -47,9 +79,11 @@ class TestDataSources:
             }
         ]
 
+        # Act
         with patch("requests.Session.get", return_value=mock_response):
             data = source.fetch_company_info("900170781-7")
 
+        # Assert
         assert data["legal_name"] == "ESCANHER ABOGADOS SAS"
         assert data["ciiu"] == "6910"
         assert data["city"] == "Bogota"
@@ -61,11 +95,16 @@ class TestDataSources:
         assert snapshot is not None
         assert snapshot.status_code == 200
 
-    def test_open_data_source_fallback_creates_snapshot(self):
+    def test_open_data_source_fallback_creates_snapshot_aaa(self):
+        """Verifica resiliencia y fallback transparente ante indisponibilidad con AAA."""
+        # Arrange
         source = OpenDataSource()
-        # Even when open data API times out or is offline, it falls back to MockSource transparently
-        data = source.fetch_company_info("800197268-4")
+        nit_fallback = "800197268-4"
 
+        # Act
+        data = source.fetch_company_info(nit_fallback)
+
+        # Assert
         assert data is not None
-        assert data["nit"] == "800197268-4"
+        assert data["nit"] == nit_fallback
         assert DataSourceSnapshot.objects.count() >= 1

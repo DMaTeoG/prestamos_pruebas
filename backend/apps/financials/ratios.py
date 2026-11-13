@@ -9,7 +9,7 @@ def safe_divide(numerator: Decimal | float | int, denominator: Decimal | float |
     try:
         num = float(numerator)
         den = float(denominator)
-        if den == 0.0:
+        if abs(den) < 1e-9:
             return None
         return round(num / den, 4)
     except (ValueError, TypeError, ZeroDivisionError):

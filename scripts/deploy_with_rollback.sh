@@ -52,7 +52,7 @@ fi
 
 # 5. Automatic Rollback
 echo "=== [CD] Healthcheck FAILED! Initiating automatic rollback ==="
-if [ "${HAS_PREVIOUS}" = true ]; then
+if [[ "${HAS_PREVIOUS}" == "true" ]]; then
   docker tag "${IMAGE_NAME}:previous" "${IMAGE_NAME}:latest"
   APP_VERSION="previous" docker compose up -d backend
   if check_health; then

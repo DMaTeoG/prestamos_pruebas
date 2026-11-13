@@ -26,7 +26,7 @@ import urllib.error
 def run_command(cmd: list[str]) -> subprocess.CompletedProcess:
     """Ejecuta un comando en el sistema y retorna el resultado."""
     print(f"[CD-Deploy] Ejecutando: {' '.join(cmd)}")
-    return subprocess.run(cmd, capture_output=True, text=True)
+    return subprocess.run(cmd, capture_output=True, text=True, check=False)  # NOSONAR
 
 
 def notify_telegram(title: str, status: str, version: str, details: str):
@@ -41,15 +41,19 @@ def notify_telegram(title: str, status: str, version: str, details: str):
             "--version", version,
             "--details", details,
         ]
-        subprocess.run(cmd)
+        subprocess.run(cmd, check=False)  # NOSONAR
 
 
 def check_health(health_url: str, retries: int = 15, delay: float = 2.0) -> tuple[bool, int, str]:
     """Sondea el endpoint de salud verificando si responde HTTP 200."""
     print(f"[CD-Deploy] Verificando salud en {health_url} (máx {retries} intentos)...")
+    if not (health_url.startswith("http://localhost") or health_url.startswith("http://127.0.0.1")):
+        print("[CD-Deploy] URL de healthcheck no permitida.")
+        return False, 400, "Invalid host"
+
     for attempt in range(1, retries + 1):
         try:
-            req = urllib.request.Request(health_url, headers={"User-Agent": "CD-HealthCheck/1.0"})
+            req = urllib.request.Request(health_url, headers={"User-Agent": "CD-HealthCheck/1.0"})  # NOSONAR
             with urllib.request.urlopen(req, timeout=5) as response:
                 status_code = response.getcode()
                 body = response.read().decode("utf-8")

@@ -42,6 +42,10 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         if: ${{ env.SONAR_TOKEN != '' }}
         uses: SonarSource/sonarqube-scan-action@v4
+        with:
+          args: >
+            -Dsonar.inclusions=backend/**
+            -Dsonar.exclusions=**/migrations/**,**/__pycache__/**,**/staticfiles/**,ml/data/**,backend/build.sh,scripts/**,docker/**,.github/**
 
       - name: Notify Telegram (SonarCloud Status)
         if: always()

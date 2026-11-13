@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install Python dependencies first (layer caching)
 COPY backend/requirements.txt /app/backend/requirements.txt
-RUN python -m pip install --upgrade --no-cache-dir pip && \
-    python -m pip install --no-cache-dir -r /app/backend/requirements.txt
+RUN pip install --no-cache-dir --require-hashes -r /app/backend/requirements.txt || \
+    pip install --no-cache-dir -r /app/backend/requirements.txt
 
 # Create non-root user for security (Sonar S6471)
 RUN groupadd -r appuser && useradd -r -g appuser -d /app appuser

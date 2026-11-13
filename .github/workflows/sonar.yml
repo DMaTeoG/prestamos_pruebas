@@ -27,8 +27,8 @@ jobs:
 
       - name: Install dependencies for test coverage
         run: |
-          pip install --upgrade pip
-          pip install -r backend/requirements.txt
+          pip install --upgrade --only-binary :all: pip || pip install --upgrade pip
+          pip install --only-binary :all: -r backend/requirements.txt || pip install -r backend/requirements.txt
 
       - name: Run Pytest with coverage XML for SonarCloud
         working-directory: backend
@@ -44,8 +44,11 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v4
         with:
           args: >
-            -Dsonar.inclusions=backend/**
-            -Dsonar.exclusions=**/migrations/**,**/__pycache__/**,**/staticfiles/**,ml/data/**,backend/build.sh,scripts/**,docker/**,.github/**
+            -Dsonar.sources=backend
+            -Dsonar.tests=backend
+            -Dsonar.inclusions=backend/apps/**,backend/config/**
+            -Dsonar.test.inclusions=backend/**/tests/**,backend/**/test_*.py
+            -Dsonar.exclusions=**/migrations/**,**/__pycache__/**,**/staticfiles/**,ml/**,backend/build.sh,scripts/**,docker/**,.github/**
 
       - name: Notify Telegram (SonarCloud Status)
         if: always()

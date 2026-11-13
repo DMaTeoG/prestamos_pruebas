@@ -31,7 +31,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install CD & Performance dependencies
-        run: pip install -r tests/performance/requirements.txt
+        run: pip install --only-binary :all: -r tests/performance/requirements.txt || pip install -r tests/performance/requirements.txt
 
       - name: Deploy to Staging Environment
         env:
@@ -86,7 +86,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r tests/performance/requirements.txt
+        run: pip install --only-binary :all: -r tests/performance/requirements.txt || pip install -r tests/performance/requirements.txt
 
       - name: Deploy to Production with Automatic Rollback (deploy.py)
         env:

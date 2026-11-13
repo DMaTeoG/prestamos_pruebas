@@ -22,7 +22,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install linter
-        run: pip install ruff
+        run: pip install --only-binary :all: ruff || pip install ruff
 
       - name: Run Ruff static linting
         working-directory: backend

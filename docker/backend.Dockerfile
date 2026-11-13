@@ -15,13 +15,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install Python dependencies first (layer caching)
 COPY backend/requirements.txt /app/backend/requirements.txt
-RUN pip install --upgrade pip && pip install -r /app/backend/requirements.txt
+RUN pip install --upgrade --no-cache-dir pip && \
+    pip install --no-cache-dir --only-binary :all: -r /app/backend/requirements.txt || \
+    pip install --no-cache-dir -r /app/backend/requirements.txt
+
+# Create non-root user for security (Sonar S6471)
+RUN groupadd -r appuser && useradd -r -g appuser -d /app appuser
 
 # Copy backend and ML artifacts/features
 COPY backend /app/backend
 COPY ml /app/ml
 COPY docker/entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh && chown -R appuser:appuser /app
+
+USER appuser
 
 WORKDIR /app/backend
 
